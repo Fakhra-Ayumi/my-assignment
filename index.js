@@ -25,6 +25,67 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const dbFilePath = path.join(__dirname, 'db.json');
 
+app.delete('/v1/stocks', (req, res) => {
+  const emptyData = {};
+  fs.writeFile(dbFilePath, JSON.stringify(emptyData, null, 2), 'utf8', (err) => {
+      if (err) {
+        return res.status(500).json({ "message": "ERROR" });
+      }
+      res.status(200).json({ message: 'Database cleared successfully' });
+  });
+});
+
+app.get('/v1/stocks', (req, res) => {
+  fs.readFile(dbFilePath, 'utf8', (err, data) => {
+    if (err) {
+        return res.status(500).json({ error: 'Failed to read the database file' });
+    }
+
+    let dbData;
+    try {
+        dbData = JSON.parse(data);
+    } catch (parseErr) {
+        return res.status(500).json({ error: 'Failed to parse the database file' });
+    }
+
+    const sortedData = Object.keys(dbData)
+        .filter(key => dbData[key] !== 0)    
+        .sort()
+        .reduce((acc, key) => {
+          acc[key] = dbData[key];
+          return acc;
+        }, {});
+
+    res.status(200).json(sortedData);
+  });
+});
+
+app.get('/v1/stocks/:name', (req, res) => {
+  const key = req.params.name;
+  fs.readFile(dbFilePath, 'utf8', (err, data) => {
+    if (err) {
+        return res.status(500).json({ error: 'Failed to read the database file' });
+    }
+
+    let dbData;
+    try {
+        dbData = JSON.parse(data);
+    } catch (parseErr) {
+        return res.status(500).json({ error: 'Failed to parse the database file' });
+    }
+
+    if (!(key in dbData)) {
+        return res.status(404).json({ error: 'Name not found in database' });
+    }
+
+    const result = {
+        [key]: dbData[key]
+    };
+
+    res.status(200).json(result);
+  });
+});
+
 app.post('/v1/stocks', (req, res) => {
   const newEntry = req.body;
   if (!newEntry.name) {
