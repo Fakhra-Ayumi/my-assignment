@@ -17,8 +17,7 @@ app.get("/secret", authConnect(digest), (req, res) => {
   res.send('SUCCESS');
 });
 
-//動くことを確認したらportを８０に変える
-const port = 3000;
+const port = 80;
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
