@@ -134,48 +134,54 @@ app.post('/v1/stocks', (req, res) => {
   });
 });
 
-app.post('/v1/sales', async (req, res) => {
+app.post('/v1/sales', (req, res) => {
   const { name, amount, price } = req.body;
 
   if (!name) {
-    return res.status(400).json({ message: "ERROR" });
+      return res.status(400).json({ "message": "ERROR" });
   }
 
-  try {
-    const data = await fs.readFile(dbFilePath, 'utf8');
-    let dbData;
+  fs.readFile(dbFilePath, 'utf8', (err, data) => {
+    if (err) {
+        return res.status(500).json({ error: 'Failed to read the database file' });
+    }
 
+    let dbData;
     try {
-      dbData = JSON.parse(data);
+        dbData = JSON.parse(data);
     } catch (parseErr) {
-      return res.status(500).json({ error: 'Failed to parse the database file' });
+        return res.status(500).json({ error: 'Failed to parse the database file' });
     }
 
     if (!(name in dbData)) {
-      return res.status(404).json({ error: 'Name not found in database' });
+        return res.status(404).json({ error: 'Name not found in database' });
     }
 
-    if (!Number.isInteger(amount) || amount < 0 || amount > dbData[name]) {
-      return res.status(400).json({ message: "ERROR" });
+    if(!Number.isInteger(amount) || amount < 0 || amount > dbData[name]) {
+      return res.status(400).json({ "message": "ERROR" });
     }
-
-    const dataToUpdate = {
-      [name]: dbData[name] - (amount || 1)
-    };
-
-    dbData = { ...dbData, ...dataToUpdate };
-
-    await fs.writeFile(dbFilePath, JSON.stringify(dbData, null, 2), 'utf8');
+  
+    if (!amount) {
+        amount = 1;
+    }
 
     if (price > 0) {
       sales += price * amount;
     }
 
-    res.status(200).json(req.body);
+    const dataToUpdate = {
+      [name]: dbData[name] - amount
+    };
 
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to read or update the database file' });
-  }
+    dbData = { ...dbData, ...dataToUpdate };
+
+    fs.writeFile(dbFilePath, JSON.stringify(dbData, null, 2), 'utf8', (err) => {
+        if (err) {
+            return res.status(500).json({ error: 'Failed to update the db json file' });
+        }
+        res.status(200).json(req.body);
+    });
+  }); 
 });
 
 app.get("/v1/sales", (req, res) => {
