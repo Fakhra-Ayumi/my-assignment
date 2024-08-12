@@ -5,8 +5,6 @@ import fs from "fs";
 import { fileURLToPath } from 'url';
 import path from "path";
 
-let sales = 0.0;
-
 const digest = auth.digest({
     realm: "secret",
     file: "./users.htdigest"
@@ -167,7 +165,6 @@ app.post('/v1/sales', (req, res) => {
     }
 
     if (price > 0) {
-      sales += price * amount;
       fs.readFile(salesFilePath, 'utf8', (err, data) => {
         if (err) {
             return res.status(500).json({ error: `Failed to read the sales json file` });
@@ -179,9 +176,11 @@ app.post('/v1/sales', (req, res) => {
         } catch (parseErr) {
             return res.status(500).json({ error: 'Failed to parse the sales json file' });
         }
+
+        let sales = salesData["sales"];
   
         const dataToAppend = {
-          "sales": sales
+          "sales": sales + price*amount
         };
   
         salesData = { ...salesData, ...dataToAppend };
@@ -229,7 +228,7 @@ app.get("/v1/sales", (req, res) => {
     const formattedSales = salesData["sales"].toFixed(2);
     let formattedSalesNumber = Number(formattedSales);
     const result = {
-        "sales": formattedSalesNumber
+      "sales": formattedSalesNumber
     };
 
     res.status(200).json(result);
