@@ -5,7 +5,7 @@ import fs from "fs";
 import { fileURLToPath } from 'url';
 import path from "path";
 
-var sales = 0;
+let sales = 0.00;
 
 const digest = auth.digest({
     realm: "secret",
@@ -178,15 +178,11 @@ app.post('/v1/sales', async (req, res) => {
   }
 });
 
-app.get("/v1/sales", async (req, res) => {
-  try {
-    const formattedSales = sales.toFixed(2);
-    let formattedSalesNumber = Number(formattedSales);
-    const data = { sales: formattedSalesNumber };
-    res.status(200).json(data);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to retrieve sales data' });
-  }
+app.get("/v1/sales", (req, res) => {
+  const formattedSales = sales.toFixed(2);
+  let formattedSalesNumber = Number(formattedSales);
+  const data = { "sales": formattedSalesNumber };
+  res.status(200).json(data);
 });
 
 const port = 8080;
