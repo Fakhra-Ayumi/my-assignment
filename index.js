@@ -24,7 +24,9 @@ app.get("/secret", authConnect(digest), (req, res) => {
 
 app.get("/v1/sales", (req, res) => {
   const formattedSales = sales.toFixed(2);
-  res.status(200).json({"sales": Number(formattedSales)});
+  let formattedSalesNumber = Number(formattedSales);
+  const data = { "sales": formattedSalesNumber };
+  res.status(200).json(data);
 });
 
 app.use(express.json());
