@@ -5,6 +5,8 @@ import fs from "fs";
 import { fileURLToPath } from 'url';
 import path from "path";
 
+var sales = 0;
+
 const digest = auth.digest({
     realm: "secret",
     file: "./users.htdigest"
@@ -18,6 +20,11 @@ app.get("/", (req, res) => {
 
 app.get("/secret", authConnect(digest), (req, res) => {
   res.send('SUCCESS');
+});
+
+app.get("/v1/sales", (req, res) => {
+  const formattedSales = sales.toFixed(2);
+  res.status(200).json({"sales": Number(formattedSales)});
 });
 
 app.use(express.json());
@@ -130,6 +137,27 @@ app.post('/v1/stocks', (req, res) => {
           res.status(200).json({ message: 'Database is updated successfully', data: dbData });
       });
   });
+});
+
+app.post('/v1/sales/', (req, res) => {
+  const { name, amount, price } = req.body;
+
+  if (!name) {
+      return res.status(400).json({ "message": "ERROR" });
+  }
+
+  if(!Number.isInteger(amount) || amount < 0) {
+    return res.status(400).json({ "message": "ERROR" });
+  }
+
+  if (!amount) {
+      amount = 1;
+  }
+  
+  if (price > 0) {
+    sales += price * amount;
+  }
+  res.status(200).json(req.body);
 });
 
 const port = 8080;
