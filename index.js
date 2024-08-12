@@ -5,7 +5,7 @@ import fs from "fs";
 import { fileURLToPath } from 'url';
 import path from "path";
 
-let sales = 0.00;
+let sales = 0.0;
 
 const digest = auth.digest({
     realm: "secret",
@@ -26,6 +26,7 @@ app.use(express.json());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const dbFilePath = path.join(__dirname, 'db.json');
+const salesFilePath = path.join(__dirname, 'sales.json');
 
 app.delete('/v1/stocks', (req, res) => {
   const emptyData = {};
@@ -167,6 +168,30 @@ app.post('/v1/sales', (req, res) => {
 
     if (price > 0) {
       sales += price * amount;
+      fs.readFile(salesFilePath, 'utf8', (err, data) => {
+        if (err) {
+            return res.status(500).json({ error: `Failed to read the sales json file` });
+        }
+  
+        let salesData;
+        try {
+            salesData = JSON.parse(data);
+        } catch (parseErr) {
+            return res.status(500).json({ error: 'Failed to parse the sales json file' });
+        }
+  
+        const dataToAppend = {
+          "sales": sales
+        };
+  
+        salesData = { ...salesData, ...dataToAppend };
+  
+        fs.writeFile(salesFilePath, JSON.stringify(salesData, null, 2), 'utf8', (err) => {
+            if (err) {
+                return res.status(500).json({ error: 'Failed to update the sales json file' });
+            }
+        });
+      }); 
     }
 
     const dataToUpdate = {
@@ -185,10 +210,30 @@ app.post('/v1/sales', (req, res) => {
 });
 
 app.get("/v1/sales", (req, res) => {
-  const formattedSales = sales.toFixed(2);
-  let formattedSalesNumber = Number(formattedSales);
-  const data = { "sales": formattedSalesNumber };
-  res.status(200).json(data);
+  fs.readFile(salesFilePath, 'utf8', (err, data) => {
+    if (err) {
+        return res.status(500).json({ error: 'Failed to read the sales file' });
+    }
+
+    let salesData;
+    try {
+        salesData = JSON.parse(data);
+    } catch (parseErr) {
+        return res.status(500).json({ error: 'Failed to parse the sales file' });
+    }
+
+    if (!("sales" in salesData)) {
+        return res.status(404).json({ error: 'sales not found in file' });
+    }
+
+    const formattedSales = salesData["sales"].toFixed(2);
+    let formattedSalesNumber = Number(formattedSales);
+    const result = {
+        "sales": formattedSalesNumber
+    };
+
+    res.status(200).json(result);
+  });
 });
 
 const port = 8080;
