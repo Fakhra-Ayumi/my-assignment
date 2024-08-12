@@ -180,7 +180,6 @@ app.post('/v1/sales', (req, res) => {
         if (err) {
             return res.status(500).json({ error: 'Failed to update the db json file' });
         }
-        res.status(200).json({ message: 'Database is updated successfully', data: dbData });
     });
   });
   
