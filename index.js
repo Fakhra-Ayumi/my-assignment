@@ -156,12 +156,12 @@ app.post('/v1/sales', (req, res) => {
         return res.status(404).json({ error: 'Name not found in database' });
     }
 
+    if (!req.body.amount) {
+      req.body.amount = 1;
+    }
+
     if(!Number.isInteger(amount) || amount < 0 || amount > dbData[name]) {
       return res.status(400).json({ "message": "ERROR" });
-    }
-  
-    if (!amount) {
-        amount = 1;
     }
 
     if (price > 0) {
