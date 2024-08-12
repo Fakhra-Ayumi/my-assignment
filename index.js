@@ -22,13 +22,6 @@ app.get("/secret", authConnect(digest), (req, res) => {
   res.send('SUCCESS');
 });
 
-app.get("/v1/sales", (req, res) => {
-  const formattedSales = sales.toFixed(2);
-  let formattedSalesNumber = Number(formattedSales);
-  const data = { "sales": formattedSalesNumber };
-  res.status(200).json(data);
-});
-
 app.use(express.json());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -189,6 +182,13 @@ app.post('/v1/sales', (req, res) => {
     sales += price * amount;
   }
   res.status(200).json(req.body);
+});
+
+app.get("/v1/sales", (req, res) => {
+  const formattedSales = sales.toFixed(2);
+  let formattedSalesNumber = Number(formattedSales);
+  const data = { "sales": formattedSalesNumber };
+  res.status(200).json(data);
 });
 
 const port = 8080;
